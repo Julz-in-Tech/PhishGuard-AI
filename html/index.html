@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard AI — Threat Detection Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <h1>PhishGuard <span>AI</span></h1>
+            </div>
+            <div class="status-badge">
+                <span class="dot online"></span> System Ready
+            </div>
+        </header>
+
+        
+        <main class="dashboard-grid">
+            <section class="card input-card">
+                <h2><i class="fa-solid fa-magnifying-glass"></i> Analyze Threat</h2>
+                <p class="subtitle">Paste email headers, message content, or suspicious URLs below.</p>
+                
+                <form id="phishForm">
+                    <div class="form-group">
+                        <label for="sender">Sender Email / Address</label>
+                        <input type="text" id="sender" placeholder="e.g., security@paypa1-support.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject Line</label>
+                        <input type="text" id="subject" placeholder="e.g., Urgent: Account Suspended">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailBody">Email Content or Target URL</label>
+                        <textarea id="emailBody" rows="6" placeholder="Paste full email text or URL here..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="analyzeBtn">
+                        <i class="fa-solid fa-bolt"></i> Run AI Analysis
+                    </button>
+                </form>
+            </section>
+
+            
+            <section class="card results-card">
+                <h2><i class="fa-solid fa-chart-pie"></i> Detection Report</h2>
+                
+                
+                <div id="emptyState" class="empty-state">
+                    <i class="fa-solid fa-radar radar-icon"></i>
+                    <p>No analysis run yet. Submit an email or URL to generate a risk score.</p>
+                </div>
+
+               
+                <div id="reportView" class="report-view hidden">
+                    <div class="score-container">
+                        <div class="gauge-meter">
+                            <span id="riskScore" class="score-number">0%</span>
+                            <span class="score-label">RISK LEVEL</span>
+                        </div>
+                        <div class="verdict-tag" id="verdictBadge">PENDING</div>
+                    </div>
+
+                    <div class="flag-section">
+                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Key Risk Drivers</h3>
+                        <ul id="flagList" class="flag-list">
+                            
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
