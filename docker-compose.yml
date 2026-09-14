@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  python-ml-service:
+    build:
+      context: ./backend/python-ml-service
+      dockerfile: Dockerfile
+    container_name: phishguard-python-ml
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+    restart: always
