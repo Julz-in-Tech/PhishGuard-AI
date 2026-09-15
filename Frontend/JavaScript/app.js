@@ -26,22 +26,41 @@ document.addEventListener('DOMContentLoaded', () => {
         analyzeBtn.disabled = true;
         analyzeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...`;
 
-        // 3. Temporary Mock Analysis Logic
-        // (We will replace this setTimeout block with an actual fetch() call to Java/Python later)
-        setTimeout(() => {
-            const mockAnalysis = generateMockResult(sender, emailBody);
-            
-            // Render results to screen
-            displayResults(mockAnalysis);
+        // 3. Live API Integration with Python Backend
+        try {
+            const response = await fetch('http://localhost:8000/api/v1/analyze', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    sender: sender, 
+                    subject: subject, 
+                    body: emailBody 
+                })
+            });
 
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const resultData = await response.json();
+            
+            // Render results directly from Python API response
+            displayResults(resultData);
+
+        } catch (error) {
+            console.error('Error connecting to ML Service:', error);
+            alert('Failed to connect to PhishGuard AI service. Make sure your Docker container is running at http://localhost:8000.');
+        } finally {
             // Reset Button State
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Run AI Analysis`;
-        }, 1200);
+        }
     });
 
     /**
-     * Updates the DOM with the analysis results
+     * Updates the DOM with the analysis results returned from the API
      */
     function displayResults(data) {
         // Hide empty state placeholder and show report view
@@ -62,56 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Populate Risk Flags
         flagListElem.innerHTML = '';
-        data.flags.forEach(flag => {
-            const li = document.createElement('li');
-            li.className = 'flag-item';
-            li.style.borderLeftColor = data.badgeColor;
-            li.innerText = flag;
-            flagListElem.appendChild(li);
-        });
-    }
-
-    /**
-     * Generates temporary sample data based on user input
-     */
-    function generateMockResult(sender, body) {
-        const textToTest = (sender + " " + body).toLowerCase();
-
-        // Basic keyword checks for mock testing
-        const containsUrgency = /urgent|suspended|verify|action required|immediately/i.test(textToTest);
-        const containsSpoof = /paypa1|securit|account|login|update/i.test(textToTest);
-
-        if (containsUrgency && containsSpoof) {
-            return {
-                score: 92,
-                verdict: 'HIGH RISK',
-                badgeColor: 'var(--danger-red)',
-                flags: [
-                    'Possible brand typosquatting or domain mismatch detected',
-                    'High linguistic urgency metric (88% pressure sentiment)',
-                    'Call-to-action requests immediate credential verification'
-                ]
-            };
-        } else if (containsUrgency || containsSpoof) {
-            return {
-                score: 58,
-                verdict: 'SUSPICIOUS',
-                badgeColor: 'var(--warning-orange)',
-                flags: [
-                    'Moderate urgency wording detected in email body',
-                    'Unverified sender domain reputation'
-                ]
-            };
-        } else {
-            return {
-                score: 12,
-                verdict: 'LOW RISK',
-                badgeColor: 'var(--safe-green)',
-                flags: [
-                    'No aggressive urgency patterns identified',
-                    'Standard communication baseline metrics passed'
-                ]
-            };
+        if (data.flags && data.flags.length > 0) {
+            data.flags.forEach(flag => {
+                const li = document.createElement('li');
+                li.className = 'flag-item';
+                li.style.borderLeftColor = data.badgeColor;
+                li.innerText = flag;
+                flagListElem.appendChild(li);
+            });
         }
     }
 });
