@@ -1,11 +1,18 @@
+version: '3.8'
+
 services:
   python-ml-service:
-    build:
-      context: ./backend/python-ml-service
-      dockerfile: Dockerfile
+    build: ./Backend/python-ml-service
     container_name: phishguard-python-ml
     ports:
       - "8000:8000"
+
+  java-service:
+    build: ./Backend/java-service
+    container_name: phishguard-java-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - python-ml-service
     environment:
-      - ENVIRONMENT=production
-    restart: always
+      - PYTHON_ML_SERVICE_URL=http://python-ml-service:8000
