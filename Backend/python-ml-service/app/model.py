@@ -1,77 +1,64 @@
 import re
-from typing import List, Dict, Any
 
 class PhishingDetector:
-    def __init__(self):
-        # High-risk urgency and pressure keywords
-        self.urgency_keywords = [
-            r"urgent", r"immediately", r"suspended", r"action required",
-            r"unauthorized", r"verify your account", r"locked", r"security alert",
-            r"24 hours", r"terminate", r"failure to respond"
+    def extract_features(self, sender: str = "", subject: str = "", body: str = ""):
+        score = 0
+        flags = []
+
+        text = f"{subject} {body}".lower()
+        sender_lower = (sender or "").lower()
+
+        # Rule 1: Urgent or coercive language
+        urgent_keywords = [
+            "urgent", "immediately", "verify account", "action required",
+            "password reset", "account suspended", "unauthorized login", "billing issue"
         ]
-        
-        # Commonly spoofed brands
-        self.brand_keywords = [
-            "paypal", "bankofamerica", "wellsfargo", "chase", "apple", 
-            "microsoft", "netflix", "amazon", "google"
-        ]
+        found_urgency = [kw for kw in urgent_keywords if kw in text]
+        if found_urgency:
+            score += 35
+            flags.append(f"Urgent language detected: {', '.join(found_urgency[:2])}")
 
-    def extract_features(self, sender: str, subject: str, body: str) -> Dict[str, Any]:
-        text_content = f"{subject} {body}".lower()
-        sender_content = sender.lower()
-        
-        flags: List[str] = []
-        risk_score = 10  # Baseline safe score
+        # Rule 2: Suspicious or unsecure links
+        if "http://" in text or "bit.ly" in text or "tinyurl.com" in text:
+            score += 40
+            flags.append("Contains unsecure or shortened URLs (HTTP / shortlink)")
 
-        # 1. Check for Urgency Language
-        urgency_hits = [kw for kw in self.urgency_keywords if re.search(kw, text_content)]
-        if urgency_hits:
-            risk_score += min(len(urgency_hits) * 15, 45)
-            flags.append(f"High-urgency language detected ({len(urgency_hits)} pressure terms found)")
+        # Rule 3: Suspicious link text vs domain mismatch indicators
+        link_suspicious_terms = ["login-verify", "update-security", "secure-bank", "account-update"]
+        if any(term in text for term in link_suspicious_terms):
+            score += 35
+            flags.append("Contains highly suspicious authentication links")
 
-        # 2. Check for Brand Impersonation / Typosquatting
-        for brand in self.brand_keywords:
-            # Check if brand appears in sender or body with common typos (e.g., paypa1, micros0ft)
-            typo_pattern = brand.replace('a', '[a1@]').replace('o', '[o0]').replace('l', '[l1|]')
-            if re.search(typo_pattern, sender_content + " " + text_content) and brand not in sender_content:
-                risk_score += 30
-                flags.append(f"Potential brand typosquatting or spoofing targeting '{brand.capitalize()}'")
-                break
+        # Rule 4: Sender domain spoofing checks (e.g., free email domains pretending to be official)
+        suspicious_sender_patterns = ["support", "security", "admin", "service", "verify"]
+        free_domains = ["@gmail.com", "@yahoo.com", "@hotmail.com", "@outlook.com"]
+        if any(pattern in sender_lower for pattern in suspicious_sender_patterns) and any(sender_lower.endswith(domain) for domain in free_domains):
+            score += 30
+            flags.append("Official-sounding sender address using a free public email provider")
 
-        # 3. Check for Suspicious Link Indicators
-        urls = re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', text_content)
-        if urls:
-            for url in urls:
-                # Flag IP addresses used as domains
-                if re.search(r'https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', url):
-                    risk_score += 25
-                    flags.append("Raw IP address used in link instead of a domain name")
-                # Flag suspicious subdomains or top-level domains
-                if any(tld in url for tld in ['.xyz', '.top', '.work', '.click', '-security', '-update']):
-                    risk_score += 20
-                    flags.append("Link contains a high-risk TLD or suspicious domain keyword")
+        # Cap score at 100 max
+        score = min(score, 100)
 
-        # Cap score between 0 and 99
-        risk_score = min(max(risk_score, 5), 99)
-
-        # Determine Verdict & Badge Color
-        if risk_score >= 70:
-            verdict = "HIGH RISK"
-            color = "var(--danger-red)"
-        elif risk_score >= 40:
-            verdict = "SUSPICIOUS"
-            color = "var(--warning-orange)"
+        # Determine Verdict, Risk Level, and Badge Color
+        if score >= 70:
+            verdict = "HIGH RISK - PHISHING DETECTED"
+            badge_color = "#d93025"  # Red
+            risk_level = "HIGH"
+        elif score >= 30:
+            verdict = "MEDIUM RISK - SUSPICIOUS EMAIL"
+            badge_color = "#f2994a"  # Orange / Yellow
+            risk_level = "MEDIUM"
         else:
-            verdict = "LOW RISK"
-            color = "var(--safe-green)"
-            if not flags:
-                flags.append("No aggressive urgency or domain spoofing indicators found")
+            verdict = "LOW RISK - SAFE EMAIL"
+            badge_color = "#1e8e3e"  # Green
+            risk_level = "LOW"
 
         return {
-            "score": risk_score,
+            "score": score,
             "verdict": verdict,
-            "badgeColor": color,
-            "flags": flags
+            "badgeColor": badge_color,
+            "riskLevel": risk_level,
+            "flags": flags if flags else ["No threat indicators found"]
         }
 
 detector = PhishingDetector()
