@@ -8,7 +8,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://mail.google.com/*",
+    "*://mail.google.com/*",
     "http://localhost:8080/*"
   ],
   "background": {
@@ -16,8 +16,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://mail.google.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "*://mail.google.com/*",
+        "https://mail.google.com/mail/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": true
     }
   ]
 }

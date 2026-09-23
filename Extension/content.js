@@ -1,6 +1,9 @@
+console.log("🚀 PhishGuard AI: Content Script Successfully Loaded into Gmail!");
+
 let currentEmailId = "";
 
 function injectThreatBanner(data) {
+  console.log("🛡️ PhishGuard AI: Injecting Threat Banner:", data);
   const existingBanner = document.getElementById("phishguard-banner");
   if (existingBanner) existingBanner.remove();
 
@@ -23,14 +26,16 @@ function injectThreatBanner(data) {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    z-index: 99999;
   `;
 
   banner.innerHTML = `
     <span>🛡️ PhishGuard AI Analysis: ${data.verdict} (Risk Score: ${data.score}%)</span>
-    <span style="font-size: 12px; font-weight: normal;">Flags: ${data.flags.join(", ") || "None"}</span>
+    <span style="font-size: 12px; font-weight: normal;">Flags: ${data.flags ? data.flags.join(", ") : "None"}</span>
   `;
 
-  const header = document.querySelector(".ha");
+  // Inject at the top of the open email container or header
+  const header = document.querySelector(".ha") || document.querySelector(".nH[role='main']") || document.body;
   if (header) {
     header.prepend(banner);
   }
@@ -51,14 +56,20 @@ function processActiveEmail() {
   if (emailIdentifier === currentEmailId) return;
   currentEmailId = emailIdentifier;
 
+  console.log("🛡️ PhishGuard AI: Detected Open Email ->", { sender, subject });
+
   const payload = { sender, subject, body };
 
   chrome.runtime.sendMessage({ action: "ANALYZE_EMAIL", payload }, (response) => {
+    console.log("🛡️ PhishGuard AI: Service Worker Response ->", response);
     if (response && response.success) {
       injectThreatBanner(response.data);
+    } else {
+      console.error("🛡️ PhishGuard AI Error:", response?.error);
     }
   });
 }
 
+// Observe Gmail DOM mutations continuously for email navigation
 const observer = new MutationObserver(() => processActiveEmail());
 observer.observe(document.body, { childList: true, subtree: true });
