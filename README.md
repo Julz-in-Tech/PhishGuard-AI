@@ -1,117 +1,51 @@
-🛡️ PhishGuard AI - Real-Time Cybersecurity & Phishing Sentinel
-
-PhishGuard AI is an enterprise-grade, multi-tier threat detection system that leverages machine learning to evaluate email content for phishing indicators. The platform features an asynchronous Java Spring Boot API Gateway, a containerized Python ML inference service, and a Chrome Browser Extension (Manifest V3) that natively integrates threat assessments directly inside Gmail.
-
-🏗️ Architecture & System Topology
-
-┌─────────────────────────────────────────────────────────────┐
-│ Gmail DOM (Browser Context)                                 │
+🛡️ PhishGuard AI - Real-Time Security SentinelAn enterprise-grade, multi-tier phishing detection engine powered by Java Spring Boot, FastAPI, and a seamless Chrome Extension DOM integration for Gmail.🏗️ System Topology & Data Flow┌─────────────────────────────────────────────────────────────┐
+│ 📩 Gmail DOM (Active Browser Tab)                           │
 │ Extension Content Script observes & extracts email metadata  │
 └──────────────────────────────┬──────────────────────────────┘
-│ Chrome Extension Messaging
+│ ⚡ Chrome Extension Messaging
 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Background Service Worker (background.js)                   │
-│ Dispatches network requests asynchronously                   │
+│ ⚙️ Background Service Worker (background.js)               │
+│ Dispatches cross-origin requests to local gateway API       │
 └──────────────────────────────┬──────────────────────────────┘
-│ HTTP POST /api/v1/detect (8080)
+│ 🚀 HTTP POST /api/v1/detect (Port 8080)
 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Java Spring Boot API Gateway (phishguard-java-gateway)      │
-│ - Orchestrates network traffic & DTO conversions           │
-│ - Exposes REST endpoints on port 8080                        │
+│ ☕ Java Spring Boot API Gateway (phishguard-java-gateway)    │
+│ - Orchestrates network traffic & DTO transformations        │
+│ - Exposes REST endpoints on port 8080                       │
 └──────────────────────────────┬──────────────────────────────┘
-│ Internal REST Call (8000)
+│ 🐍 Internal REST Call (Port 8000)
 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Python ML Microservice (phishguard-python-ml)               │
+│ 🤖 Python ML Microservice (phishguard-python-ml)             │
 │ - Runs FastAPI & natural language evaluation logic          │
-│ - Computes risk scores & returns metadata flags              │
-└──────────────────────────────┘
-
-
-🚀 Tech Stack
-
-Inference Engine: Python 3.10, FastAPI, Scikit-learn, Uvicorn
-
-Gateway Orchestration: Java 17, Spring Boot, Spring RestClient, Lombok
-
-Containerization & Service Mesh: Docker, Docker Compose
-
-Client Integration: JavaScript (ES6+), Chrome Manifest V3 API, HTML5/CSS3
-
-📂 Repository Structure
-
-PhishGuard-AI/
-├── Backend/
-│   ├── java-service/
+│ - Computes risk scores & generates threat indicator flags   │
+└─────────────────────────────────────────────────────────────┘
+✨ Features⚡ Live DOM Inspection: Dynamically captures email content, sender details, and subject lines in real time inside Gmail.🛡️ Threat Overlay Badge: Injects custom risk assessment banners directly over email headers.🧩 Decoupled Architecture: Asynchronous orchestration via Java Spring Boot gateway connected to a Python microservice.🐳 Containerized Setup: Fully configured multi-container execution using docker-compose.🚀 Tech StackTierTechnologyPurposeML EnginePython 3.10, FastAPI, Scikit-LearnNatural language processing & threat scoringAPI GatewayJava 17, Spring Boot 3, LombokMicroservice orchestration & REST routingClient InterfaceJavaScript ES6+, Manifest V3Gmail DOM mutation observer & UI injectionDevOps & MeshDocker, Docker ComposeIsolated container runtime & local networking📂 Repository StructurePhishGuard-AI/
+├── 📁 Backend/
+│   ├── 📁 java-service/         # Spring Boot Gateway (Port 8080)
 │   │   ├── src/
 │   │   ├── pom.xml
 │   │   └── Dockerfile
-│   └── python-ml-service/
+│   └── 📁 python-ml-service/    # FastAPI ML Engine (Port 8000)
 │       ├── app/
 │       ├── requirements.txt
 │       └── Dockerfile
-├── Extension/
+├── 📁 Extension/                 # Chrome Manifest V3 Extension
 │   ├── manifest.json
 │   ├── background.js
 │   └── content.js
-├── Frontend/
-│   ├── html/
-│   └── JavaScript/
-│       └── app.js
-└── docker-compose.yml
-
-
-🛠️ Local Setup & Run Guide
-
-Prerequisites
-
-Docker Desktop installed and running
-
-Google Chrome browser
-
-1. Launch Containerized Microservices
-
-Run Docker Compose from the root directory to build and spin up the backend mesh:
-
-docker-compose up --build
-
-
-Verify local service health:
-
-Java API Gateway: http://localhost:8080/api/v1/detect
-
-Python ML Engine: http://localhost:8000/api/v1/analyze
-
-2. Load Chrome Extension
-
-Open Google Chrome and navigate to chrome://extensions/.
-
-Enable Developer mode via the toggle switch in the top-right corner.
-
-Click Load unpacked in the top-left menu.
-
-Select the Extension/ directory from this repository.
-
-Open Gmail and click on any email to view the live threat assessment badge generated by PhishGuard AI!
-
-🔌 API Endpoint Specification
-
-POST /api/v1/detect
-
-Request Payload:
-
-{
+├── 📁 Frontend/                  # Dashboard Interface
+│   └── index.html
+└── 📄 docker-compose.yml
+🛠️ Local Quickstart GuidePrerequisites🐳 Docker Desktop installed and running🌐 Google Chrome browser1️⃣ Launch Backend MicroservicesRun docker-compose from the project root directory:docker-compose up --build
+Service Health Targets:☕ Java API Gateway: http://localhost:8080/api/v1/detect🐍 Python ML Service: http://localhost:8000/api/v1/analyze2️⃣ Load the Chrome ExtensionOpen Chrome and navigate to chrome://extensions/.Toggle on Developer mode in the top-right corner.Click Load unpacked in the top-left menu.Select the Extension/ directory from this repository.Open Gmail and click any email to trigger automatic threat analysis!🔌 API Endpoint SpecificationPOST /api/v1/detect📥 Request Payload:{
 "sender": "security@account-verify-update.com",
 "subject": "Urgent Action Required: Account Suspended",
 "body": "Your account has been restricted. Click here immediately to update your password."
 }
-
-
-Response Payload:
-
-{
+📤 Response Payload:{
 "score": 85,
 "verdict": "POSSIBLE_PHISHING",
 "badgeColor": "#ff0055",
@@ -121,14 +55,6 @@ Response Payload:
 ]
 }
 
-
-☁️ Cloud Deployment Architecture
-
-The application is structured for cloud deployment:
-
-Frontend Dashboard: Hosted on Vercel
-
-Java Gateway & Python ML Containers: Deployed as Docker Web Services on Render
 
 WTC-37R65HKM
 WTC-JQK9THV9
