@@ -1,3 +1,5 @@
+const GATEWAY_URL = "https://phishguard-java-gateway.onrender.com/api/v1/detect";
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "ANALYZE_EMAIL") {
     fetch("http://127.0.0.1:8080/api/v1/detect", {
